@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicHearth - Portal Comunal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2e7d32; /* Verde comunidad */
+            --secondary: #1976d2; /* Azul institucional */
+            --light: #f4f7f6;
+            --dark: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        /* Navegación */
+        nav {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        nav ul li:hover {
+            color: #a5d6a7;
+        }
+
+        /* Secciones */
+        section {
+            padding: 40px 20px;
+            max-width: 1000px;
+            margin: auto;
+            display: none; /* Ocultas por defecto */
+        }
+
+        section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Tarjetas */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        /* Formulario */
+        form {
+            display: grid;
+            gap: 15px;
+        }
+
+        input, select, textarea {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #1b5e20;
+        }
+
+        /* Mapa y Demo */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .map-placeholder {
+            background: #e0e0e0;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        /* Footer */
+        footer {
+            background: #222;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+        }
+
+        .social-icons a {
+            color: white;
+            font-size: 24px;
+            margin: 0 10px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo"><strong>CivicHearth</strong></div>
+        <ul>
+            <li onclick="showSection('inicio')">Inicio</li>
+            <li onclick="showSection('demografia')">Demografía</li>
+            <li onclick="showSection('registro')">Registro</li>
+            <li onclick="showSection('repositorio')">Repositorio</li>
+        </ul>
+    </nav>
+
+    <!-- 1. INICIO -->
+    <section id="inicio" class="active">
+        <h1>Bienvenidos a CivicHearth</h1>
+        <p>Tu portal central de gestión comunitaria.</p>
+        <div class="stats-grid">
+            <div class="card"><h3>1,240</h3><p>Habitantes</p></div>
+            <div class="card"><h3>85%</h3><p>Participación</p></div>
+            <div class="card"><h3>12</h3><p>Proyectos Activos</p></div>
+        </div>
+    </section>
+
+    <!-- 2. DEMOGRAFÍA Y MAPA -->
+    <section id="demografia">
+        <h2>Demografía y Territorio</h2>
+        <div class="card">
+            <h3>Distribución de Población</h3>
+            <p>Niños: 15% | Jóvenes: 30% | Adultos: 40% | Adulto Mayor: 15%</p>
+        </div>
+        <div class="map-placeholder">
+            <p><i class="fas fa-map-marked-alt"></i> Mapa Interactivo (Aquí se cargará Leaflet/Google Maps)</p>
+        </div>
+    </section>
+
+    <!-- 3. REGISTRO COMUNAL -->
+    <section id="registro">
+        <h2>Registro Comunal</h2>
+        <div class="card">
+            <form id="registroForm">
+                <label>Nombre Completo</label>
+                <input type="text" placeholder="Ej. Juan Pérez" required>
+                
+                <label>Edad</label>
+                <input type="number" min="0" required>
+                
+                <label>Sexo</label>
+                <select>
+                    <option>Masculino</option>
+                    <option>Femenino</option>
+                    <option>Otro</option>
+                </select>
+                
+                <label>Tipo de Vivienda</label>
+                <select>
+                    <option>Casa Propia</option>
+                    <option>Arrendada</option>
+                    <option>Departamento</option>
+                    <option>Otro</option>
+                </select>
+                
+                <button type="submit">Registrar Ciudadano</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- 4. NOTAS Y REPOSITORIO -->
+    <section id="repositorio">
+        <h2>Bitácora y Repositorio</h2>
+        <div class="card">
+            <h3>Nueva Nota de Bitácora</h3>
+            <textarea rows="4" placeholder="Escribe aquí las novedades de la comunidad..."></textarea>
+            <button style="margin-top:10px">Guardar Nota</button>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-folder-open"></i> Archivos Comunitarios</h3>
+            <ul>
+                <li><i class="fas fa-file-pdf"></i> Acta de Asamblea_Marzo.pdf</li>
+                <li><i class="fas fa-file-image"></i> Plano_Sector_Norte.jpg</li>
+            </ul>
+            <input type="file" id="fileInput" style="display:none">
+            <button onclick="document.getElementById('fileInput').click()" style="background: var(--secondary)">Subir Documento</button>
+        </div>
+    </section>
+
+    <!-- 5. REDES SOCIALES (FOOTER) -->
+    <footer>
+        <p>CivicHearth &copy; 2023 - Conectando Comunidades</p>
+        <div class="social-icons">
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-whatsapp"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+        </div>
+    </footer>
+
+    <script>
+        function showSection(id) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            // Mostrar la seleccionada
+            document.getElementById(id).classList.add('active');
+        }
+
+        // Manejo del formulario
+        document.getElementById('registroForm').onsubmit = function(e) {
+            e.preventDefault();
+            alert('¡Registro enviado con éxito a la base de datos de CivicHearth!');
+        }
+    </script>
+</body>
+</html>
