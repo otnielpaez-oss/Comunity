@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicHearth - Cúa (Firebase)</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    
+    <style>
+        :root { --primary: #2e7d32; --secondary: #1976d2; --light: #f4f7f6; --dark: #333; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--light); }
+        nav { background: var(--primary); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1001; }
+        nav ul { list-style: none; display: flex; margin: 0; padding: 0; }
+        nav ul li { margin-left: 20px; cursor: pointer; }
+        section { padding: 30px 20px; max-width: 1000px; margin: auto; display: none; }
+        section.active { display: block; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        #map { height: 400px; width: 100%; border-radius: 8px; margin-top: 10px; }
+        form { display: grid; gap: 10px; }
+        input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        footer { background: #222; color: white; text-align: center; padding: 20px; margin-top: 40px; }
+        .social-icons a { color: white; font-size: 20px; margin: 0 10px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo"><strong>CivicHearth Cúa</strong></div>
+        <ul>
+            <li onclick="showSection('inicio')">Inicio</li>
+            <li onclick="showSection('demografia')">Mapa</li>
+            <li onclick="showSection('registro')">Registro</li>
+            <li onclick="showSection('repositorio')">Notas</li>
+        </ul>
+    </nav>
+
+    <!-- 1. INICIO -->
+    <section id="inicio" class="active">
+        <h1>Panel Comunitario Cúa</h1>
+        <div id="stats" class="card">
+            <p>Cargando estadísticas de la comunidad...</p>
+        </div>
+    </section>
+
+    <!-- 2. DEMOGRAFÍA Y MAPA -->
+    <section id="demografia">
+        <h2>Mapa de la Comunidad</h2>
+        <div class="card">
+            <p><i class="fas fa-map-marker-alt"></i> Los marcadores azules son vecinos registrados.</p>
+            <div id="map"></div>
+        </div>
+    </section>
+
+    <!-- 3. REGISTRO -->
+    <section id="registro">
+        <h2>Registro de Residente</h2>
+        <div class="card">
+            <form id="registroForm">
+                <input type="text" id="nombre" placeholder="Nombre Completo" required>
+                <input type="number" id="edad" placeholder="Edad" required>
+                <select id="sexo">
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                </select>
+                <select id="vivienda">
+                    <option value="Propia">Casa Propia</option>
+                    <option value="Alquilada">Alquilada</option>
+                </select>
+                <p><small>Haz clic en el mapa en la sección "Mapa" para obtener tu ubicación si deseas marcar tu casa.</small></p>
+                <input type="text" id="coords" placeholder="Coordenadas (opcional: -10.15, -66.88)">
+                <button type="submit" id="btnGuardar">Guardar en Firebase</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- 4. REPOSITORIO -->
+    <section id="repositorio">
+        <h2>Bitácora Comunal</h2>
+        <div class="card">
+            <textarea id="notaTexto" rows="3" placeholder="¿Qué sucede hoy en Cúa?"></textarea>
+            <button onclick="guardarNota()">Publicar Nota</button>
+        </div>
+        <div id="listaNotas"></div>
+    </section>
+
+    <footer>
+        <div class="social-icons">
+            <a href="#"><i class="fab fa-whatsapp"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+        </div>
+        <p>CivicHearth Cúa &copy; 2025</p>
+    </footer>
+
+    <!-- Firebase SDK (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // 1. CONFIGURACIÓN (REEMPLAZA ESTO)
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            projectId: "TU_PROYECTO_ID",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- LÓGICA DEL MAPA ---
+        var map = L.map('map').setView([10.159, -66.886], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Capturar clic para el registro
+        map.on('click', function(e) {
+            document.getElementById('coords').value = e.latlng.lat.toFixed(6) + ", " + e.latlng.lng.toFixed(6);
+            alert("Ubicación capturada para el formulario.");
+        });
+
+        // Cargar marcadores desde Firebase en tiempo real
+        onSnapshot(collection(db, "vecinos"), (snapshot) => {
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                if(data.coords) {
+                    const latlng = data.coords.split(",");
+                    L.marker([latlng[0], latlng[1]])
+                     .addTo(map)
+                     .bindPopup(`<b>${data.nombre}</b><br>Vivienda: ${data.vivienda}`);
+                }
+            });
+            // Actualizar Estadísticas Inicio
+            document.getElementById('stats').innerHTML = `<h3>${snapshot.size}</h3><p>Vecinos registrados en Cúa</p>`;
+        });
+
+        // --- GUARDAR REGISTRO ---
+        document.getElementById('registroForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnGuardar');
+            btn.disabled = true;
+            btn.innerText = "Guardando...";
+
+            try {
+                await addDoc(collection(db, "vecinos"), {
+                    nombre: document.getElementById('nombre').value,
+                    edad: document.getElementById('edad').value,
+                    sexo: document.getElementById('sexo').value,
+                    vivienda: document.getElementById('vivienda').value,
+                    coords: document.getElementById('coords').value,
+                    fecha: new Date()
+                });
+                alert("¡Registrado en Firebase con éxito!");
+                document.getElementById('registroForm').reset();
+            } catch (error) {
+                console.error("Error: ", error);
+            }
+            btn.disabled = false;
+            btn.innerText = "Guardar en Firebase";
+        };
+
+        // --- GESTIÓN DE NOTAS ---
+        window.guardarNota = async () => {
+            const texto = document.getElementById('notaTexto').value;
+            if(!texto) return;
+            await addDoc(collection(db, "notas"), { texto, fecha: new Date() });
+            document.getElementById('notaTexto').value = "";
+        };
+
+        onSnapshot(query(collection(db, "notas"), orderBy("fecha", "desc")), (snapshot) => {
+            const container = document.getElementById('listaNotas');
+            container.innerHTML = "<h3>Últimas Notas</h3>";
+            snapshot.forEach(doc => {
+                container.innerHTML += `<div class="card"><p>${doc.data().texto}</p></div>`;
+            });
+        });
+
+        // --- NAVEGACIÓN ---
+        window.showSection = (id) => {
+            document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'demografia') setTimeout(() => map.invalidateSize(), 200);
+        };
+    </script>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</body>
+</html>
